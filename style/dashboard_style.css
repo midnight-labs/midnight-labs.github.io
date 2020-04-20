@@ -2275,8 +2275,8 @@ a {
 }
 
 .html-embed2 {
-  max-width: 1000px;
-  min-height: 1000px;
+  max-width: 1500px;
+  min-height: 500px;
   text-align: center
 }
 
@@ -2285,7 +2285,7 @@ a {
   min-height: 300px
 }
 .html-embed2.chart {
-  min-heigh: 1000px
+  min-heigh: 500px
 }
 .paragraph {
   padding-right: 20px;
