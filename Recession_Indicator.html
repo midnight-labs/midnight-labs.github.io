@@ -472,6 +472,11 @@
           }
         },
         xAxis: {
+          plotBands: [{
+            color: 'grey', // Color value
+            from: Date.UTC(1957, 7, 1), // Start of the plot band
+            to: Date.UTC(1958, 3, 1) // End of the plot band
+          }],
           crosshair: {
             width: 1.5,
             color: 'rgba(255,255,255,.4)',
