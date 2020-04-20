@@ -825,6 +825,64 @@
 
         <div id="w-node-debbc89a2dd2-415dff4a" class="text-block-13"><strong class="bold-text-8">Last Updated:</strong> Apr 21th, 10:24 PDT</div>
     </div>
+    
+    <div class="section-3" >
+        <div id="w-node-44a08bb7354c-415dff4a" class="neumorphic compact">
+          <h2 class="chart-header bottom-border">Recession Indicator<br /></h2>
+          <div class="html-embed2 chart w-embed w-script">
+            <div id="RecessionIndex"></div>
+            <script type="text/javascript">
+              var RecessionIndex = new Highcharts.Chart({
+                colors: ['#FFFFFF'],
+                "chart": {
+                  renderTo: 'RecessionIndex',
+                  "type": "line",
+                  height: 600
+                  //marginBottom: 120
+                },
+                data: {
+                  googleSpreadsheetKey: '1Kgn_QkPE58ZetRG_1g0MDpuKdxfpf-WI-8UDxuP4BYw',
+                  googleSpreadsheetWorksheet: 1
+                },
+                credits: {
+                  text: 'MXL',
+                  href: ''
+                },
+                title: {
+                  text: 'Recession Indicator',
+                },
+                tooltip: {
+                  valueDecimals: 1,
+                },
+                "series": [{
+                    type: 'line',
+                  }
+                ],
+                yAxis: [{
+                  max: 100,
+                  gridLineColor: 'rgba(150,150,150,.2)',
+                  labels: {
+                    formatter: function() {
+                      return this.value + "%";
+                    },
+                  }
+                }],
+                exporting: {
+                  chartOptions: {
+                    credits: {
+                      enabled: true,
+                    },
+                  }
+                }
+              });
+
+            </script>
+          </div>
+          <p class="paragraph-3 summary">Insert description here (1). <br /></p>
+        </div>
+
+        <div id="w-node-debbc89a2dd2-415dff4a" class="text-block-13"><strong class="bold-text-8">Last Updated:</strong> Apr 21th, 10:24 PDT</div>
+    </div>
 
 
 
