@@ -670,9 +670,23 @@
       });
 
     </script>
+    
+    <script>
+        function loadData() {
+              var url="https://docs.google.com/spreadsheets/d/1Kgn_QkPE58ZetRG_1g0MDpuKdxfpf-WI-8UDxuP4BYw/edit#gid=818089148";
+              xmlhttp=new XMLHttpRequest();
+              xmlhttp.onreadystatechange = function() {
+                if(xmlhttp.readyState == 4 && xmlhttp.status==200){
+                  document.getElementById("Date").innerHTML = xmlhttp.responseText;
+                }
+              };
+              xmlhttp.open("GET",url,true);
+              xmlhttp.send(null);
+            }
+    </script>
   </head>
 
-  <body class="body">
+  <body class="body" onload="loadData()">
     <div class="html-embed-6 w-embed w-script">
       <div id="fb-root"></div>
       <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v6.0"></script>
@@ -765,23 +779,7 @@
           </div>
           <p class="paragraph-3 summary">This indicator uses a Gaussian Process Classifier to predict the probability that a recession will occur in three months.. <br /></p>
         </div>
-
-        <script>
-            function loadData() {
-              var url="https://docs.google.com/spreadsheets/d/1Kgn_QkPE58ZetRG_1g0MDpuKdxfpf-WI-8UDxuP4BYw/edit#gid=818089148";
-              xmlhttp=new XMLHttpRequest();
-              xmlhttp.onreadystatechange = function() {
-                if(xmlhttp.readyState == 4 && xmlhttp.status==200){
-                  document.getElementById("display").innerHTML = xmlhttp.responseText;
-                }
-              };
-              xmlhttp.open("GET",url,true);
-              xmlhttp.send(null);
-            }
-        </script>
-        <button type="button" onclick="loadData()">Load Spreadsheet Data</button>
-        <div id="display"></div>
-        <div id="w-node-debbc89a2dd2-415dff4a" class="text-block-13"><strong class="bold-text-8">Last Updated:</strong> Apr 21th, 10:24 PDT</div>
+        <div id="w-node-debbc89a2dd2-415dff4a" class="text-block-13"><strong class="bold-text-8">Last Updated:</strong> <p id="Date"></p></div>
     </div>
     
      <div class="section-7 homepage">
