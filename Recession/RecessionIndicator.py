@@ -288,6 +288,9 @@ if __name__ == "__main__":
     df_Recession_Prediction.reset_index(inplace = True)
     df_Recession_Prediction.rename({'index' : 'DateTime'}, axis = 1, inplace = True)
     
+    
+    df_Recession_Prediction_Recent = df_Recession_Prediction[-240:]
+    
     #authorization
     gc = pygsheets.authorize(service_file='/Users/theodorepender/Desktop/Midnight-Labs-9d593d26ebe7.json')
     
@@ -295,20 +298,23 @@ if __name__ == "__main__":
     sh = gc.open('Recession-Indicator')
     
     #add worksheets
-    #sh.add_worksheet('Sheet2')
+    #sh.add_worksheet('Sheet3')
     
     #get last update time
     last_update = gc.drive.get_update_time('1Kgn_QkPE58ZetRG_1g0MDpuKdxfpf-WI-8UDxuP4BYw')[0:10].split('-')
     last_update = pd.datetime(int(last_update[0]),int(last_update[1]), int(last_update[2]))
     
     date_time = last_update.strftime("%A, %B %dth")
-    print("date: ", date_time)
     
     #select the sheet 
     wks = sh[0]
+    wks_recent = sh[1]
+    wks_update = sh[2]
     
     #update the sheets with the dataframes. 
     wks.set_dataframe(df_Recession_Prediction,(1,1))
+    wks_recent.set_dataframe(df_Recession_Prediction_Recent,(1,1))
+    wks_update.update_value('A1', date_time)
     
 
 
