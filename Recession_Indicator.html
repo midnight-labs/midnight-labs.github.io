@@ -772,13 +772,15 @@
               xmlhttp=new XMLHttpRequest();
               xmlhttp.onreadystatechange = function() {
                 if(xmlhttp.readyState == 4 && xmlhttp.status==200){
-                  document.getElementById("w-node-debbc89a2dd2-415dff4a").innerHTML = xmlhttp.responseText;
+                  document.getElementById("display").innerHTML = xmlhttp.responseText;
                 }
               };
               xmlhttp.open("GET",url,true);
               xmlhttp.send(null);
             }
         </script>
+        <button type="button" onclick="loadData()">Load Spreadsheet Data</button>
+        <div id="display"></div>
         <div id="w-node-debbc89a2dd2-415dff4a" class="text-block-13"><strong class="bold-text-8">Last Updated:</strong> Apr 21th, 10:24 PDT</div>
     </div>
     
