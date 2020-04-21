@@ -766,6 +766,19 @@
           <p class="paragraph-3 summary">This indicator uses a Gaussian Process Classifier to predict the probability that a recession will occur in three months.. <br /></p>
         </div>
 
+        <script>
+            function loadData() {
+              var url="https://docs.google.com/spreadsheets/d/1Kgn_QkPE58ZetRG_1g0MDpuKdxfpf-WI-8UDxuP4BYw/edit#gid=818089148";
+              xmlhttp=new XMLHttpRequest();
+              xmlhttp.onreadystatechange = function() {
+                if(xmlhttp.readyState == 4 && xmlhttp.status==200){
+                  document.getElementById("w-node-debbc89a2dd2-415dff4a").innerHTML = xmlhttp.responseText;
+                }
+              };
+              xmlhttp.open("GET",url,true);
+              xmlhttp.send(null);
+            }
+        </script>
         <div id="w-node-debbc89a2dd2-415dff4a" class="text-block-13"><strong class="bold-text-8">Last Updated:</strong> Apr 21th, 10:24 PDT</div>
     </div>
     
