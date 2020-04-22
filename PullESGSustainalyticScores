@@ -13,56 +13,99 @@ import requests
 import ipywidgets as widgets
 from ipywidgets import interact
 import pygsheets
+import io
 
 
 # -------- Try and Get MSFT -------- #
-
+#
 #try:
-#    web_data = requests.get('https://finance.yahoo.com/quote/MSFT/sustainability?p=MSFT').text
+#    web_data = requests.get('https://money.cnn.com/data/markets/russell/').text
 #    print('Success')
 #except:
 #    print("Could not get URL")
 #    
 #soup = BeautifulSoup(web_data, 'html.parser')
 #
-#esg_score = soup.find('div', {'class' : 'Fz(36px) Fw(600) D(ib) Mend(5px)'})
-#print(esg_score)
+#pages = int(soup.find('div', {'class' : 'paging'}).text.split()[-1])
 #
-#datapoint = esg_score.text
-##datapoint
+#webData = [requests.get('https://money.cnn.com/data/markets/russell/?page=' + str(p)).text for p in range(1,pages + 1)]
 #
-#elements = []
-#scores = soup.find_all('div', {'class' : 'D(ib) Fz(23px) smartphone_Fz(22px) Fw(600)'})
-#for score in scores:
-#    elements.append(score.text)
-#    
-#controversey_score = soup.find('div', {'class' : 'D(ib) Fz(36px) Fw(500)'})
-#controversey_datapoint = controversey_score.text
+#tickers = [[x.text for x in soup.findAll('a', {'class' : 'wsod_symbol'})] for soup in [BeautifulSoup(wd, 'html.parser') for wd in webData]]
+#Tickers = [x for y in tickers for x in y]
 #
-#df = pd.DataFrame({'Total ESG Score': datapoint,
-#                   'Environmental Score' : elements[0],
-#                   'Social Score' : elements[1],
-#                   'Governance Score' : elements[2],
-#                   'Controversy Score' : controversey_datapoint},
+#df = pd.DataFrame({'Market Cap' : tickers},
 #                    index = ['MSFT'])
+
+
+# ---- Get Tickers ---- #
+#
+#nasdaq_url = 'https://old.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nasdaq&render=download'
+#amex_url = 'https://old.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=amex&render=download'
+#nyse_url = 'https://old.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=download'
+#
+#nasdaq = requests.get(nasdaq_url).content
+#nasdaq_df = pd.read_csv(io.StringIO(nasdaq.decode('utf-8')))
+#
+#amex = requests.get(amex_url).content
+#amex_df = pd.read_csv(io.StringIO(amex.decode('utf-8')))
+#
+#nyse = requests.get(nyse_url).content
+#nyse_df = pd.read_csv(io.StringIO(nyse.decode('utf-8')))
+
+
 
 # -------- Functionality -------- #
 
 def getTickers(index):
     indexDictionary = {'SP500' : 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies',
+                       'SP1000' : 'https://en.wikipedia.org/wiki/List_of_S%26P_1000_companies',
+                       'SP400' : 'https://en.wikipedia.org/wiki/List_of_S%26P_400_companies',
                        'DOW' : 'https://en.wikipedia.org/wiki/Dow_Jones_Industrial_Average#Components'}
+    
     page = requests.get(indexDictionary[index]).text
     data = pd.read_html(page)
-    ticker_df = data[0]
-    tickers = ticker_df['Symbol'] 
-    security = ticker_df['Security'] 
-    sector = ticker_df['GICS Sector'] 
-    subSector = ticker_df['GICS Sub Industry'] 
-    ciks = ticker_df['CIK'] 
     
-    return list(tickers), list(security), list(sector), list(subSector), list(ciks)
+    if index == 'SP500':
+        ticker_df = data[0]
+        tickers = ticker_df['Symbol'] 
+        security = ticker_df['Security'] 
+        sector = ticker_df['GICS Sector'] 
+        subSector = ticker_df['GICS Sub Industry'] 
+        ciks = ticker_df['CIK'] 
+        
+        return list(tickers), list(security), list(sector), list(subSector), list(ciks)
 
-def yahooWebScraper(ticker):
+    elif index == 'SP1000':
+        ticker_df = data[5]
+        tickers = ticker_df['Ticker symbol'] 
+        security = ticker_df['Company'] 
+        sector = ticker_df['GICS economic sector'] 
+        subSector = ticker_df['GICS sub-industry'] 
+        ciks = ticker_df['CIK'] 
+        
+        return list(tickers), list(security), list(sector), list(subSector), list(ciks)
+
+def yahooMarketCapWebScraper(ticker):
+    
+    web_data = requests.get('https://finance.yahoo.com/quote/'+ ticker + '?p='+ ticker +'&.tsrc=fin-srch').text
+        
+    soup = BeautifulSoup(web_data, 'html.parser')
+    
+    market_cap = soup.find('td', {'class' : 'Ta(end) Fw(600) Lh(14px)',
+                                     'data-test' : 'MARKET_CAP-value'})
+    try:
+        datapoint = market_cap.text
+    except:
+        datapoint = np.nan
+    
+    df = pd.DataFrame({'Market Cap' : datapoint},
+                        index = [ticker])
+    
+    return df
+
+
+
+def yahooSustainabilityWebScraper(ticker):
     elements = []
     try:
         web_data = requests.get('https://finance.yahoo.com/quote/' + ticker + '/sustainability?p=' + ticker).text
@@ -111,15 +154,59 @@ def level(x):
     
 if __name__ == "__main__":
     
+    
+    """
+    Consider including time series so add date to the pull.
+    
+    
+    """
+    
+    # ------ SP500 ------ #
+
     index = 'SP500'
     tickers, security, sector, subSector, ciks = getTickers(index)
     characterTable = pd.DataFrame([tickers, security, sector, subSector, ciks], index = ['Ticker', 'Security', 'Sector', 'Sub_Sector', 'CIK']).T
-    esgdfList = [yahooWebScraper(ticker) for ticker in tickers]
+    esgdfList = [yahooSustainabilityWebScraper(ticker) for ticker in tickers]
     esgDataFrame = pd.concat(esgdfList).reset_index().rename({'index' : 'Ticker'}, axis = 1)
+    
+    marketcapdfList = [yahooMarketCapWebScraper(ticker) for ticker in tickers]
+    marketcapDataFrame = pd.concat(marketcapdfList).reset_index().rename({'index' : 'Ticker'}, axis = 1)
     
     esgDataFrameCharact = pd.merge(esgDataFrame, characterTable, how = 'left', on = 'Ticker')
     
+    esgDataFrameCharact = pd.merge(esgDataFrameCharact, marketcapDataFrame, how = 'left', on = 'Ticker')
+    
+    # ------ SP500 ------ #
+
+    index = 'SP1000'
+    tickers, security, sector, subSector, ciks = getTickers(index)
+    characterTable1000 = pd.DataFrame([tickers, security, sector, subSector, ciks], index = ['Ticker', 'Security', 'Sector', 'Sub_Sector', 'CIK']).T
+    esgdfList1000 = [yahooSustainabilityWebScraper(ticker) for ticker in tickers]
+    esgDataFrame1000 = pd.concat(esgdfList1000).reset_index().rename({'index' : 'Ticker'}, axis = 1)
+    
+    marketcapdfList1000 = [yahooMarketCapWebScraper(ticker) for ticker in tickers]
+    marketcapDataFrame1000 = pd.concat(marketcapdfList).reset_index().rename({'index' : 'Ticker'}, axis = 1)
+    
+    esgDataFrameCharact1000 = pd.merge(esgDataFrame1000, characterTable1000, how = 'left', on = 'Ticker')
+    
+    esgDataFrameCharact1000 = pd.merge(esgDataFrameCharact1000, marketcapDataFrame1000, how = 'left', on = 'Ticker')
+    
+    
+    # ------ Repeate for other exchanges ------ #
+    
+    nasdaq_url = 'https://old.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nasdaq&render=download'
+    
+    nasdaq = requests.get(nasdaq_url).content
+    nasdaq_df = pd.read_csv(io.StringIO(nasdaq.decode('utf-8')))
+    
+    NASDAQesgdfList = [yahooSustainabilityWebScraper(ticker) for ticker in nasdaq_df['Symbol']]
+    NASDAQesgDataFrame = pd.concat(NASDAQesgdfList).reset_index().rename({'index' : 'Ticker'}, axis = 1)
+
+    
+    # ------ Write to google sheets ------ #
+    
     gc = pygsheets.authorize(service_file='/Users/theodorepender/Desktop/Midnight-Labs-9d593d26ebe7.json')
+    
     
     #open the google spreadsheet (where 'Recession-Indicator' is the name of my sheet)
     sh = gc.open('ESG-SP500')
