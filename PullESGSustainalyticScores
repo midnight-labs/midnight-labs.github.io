@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Apr 21 21:26:21 2020
+
+@author: theodorepender
+"""
+
+from bs4 import BeautifulSoup
+import pandas as pd
+import numpy as np
+import requests 
+import ipywidgets as widgets
+from ipywidgets import interact
+import pygsheets
+
+
+# -------- Try and Get MSFT -------- #
+
+#try:
+#    web_data = requests.get('https://finance.yahoo.com/quote/MSFT/sustainability?p=MSFT').text
+#    print('Success')
+#except:
+#    print("Could not get URL")
+#    
+#soup = BeautifulSoup(web_data, 'html.parser')
+#
+#esg_score = soup.find('div', {'class' : 'Fz(36px) Fw(600) D(ib) Mend(5px)'})
+#print(esg_score)
+#
+#datapoint = esg_score.text
+##datapoint
+#
+#elements = []
+#scores = soup.find_all('div', {'class' : 'D(ib) Fz(23px) smartphone_Fz(22px) Fw(600)'})
+#for score in scores:
+#    elements.append(score.text)
+#    
+#controversey_score = soup.find('div', {'class' : 'D(ib) Fz(36px) Fw(500)'})
+#controversey_datapoint = controversey_score.text
+#
+#df = pd.DataFrame({'Total ESG Score': datapoint,
+#                   'Environmental Score' : elements[0],
+#                   'Social Score' : elements[1],
+#                   'Governance Score' : elements[2],
+#                   'Controversy Score' : controversey_datapoint},
+#                    index = ['MSFT'])
+
+# -------- Functionality -------- #
+
+def getTickers(index):
+    indexDictionary = {'SP500' : 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies',
+                       'DOW' : 'https://en.wikipedia.org/wiki/Dow_Jones_Industrial_Average#Components'}
+    page = requests.get(indexDictionary[index]).text
+    data = pd.read_html(page)
+    ticker_df = data[0]
+    tickers = ticker_df['Symbol'] 
+    security = ticker_df['Security'] 
+    sector = ticker_df['GICS Sector'] 
+    subSector = ticker_df['GICS Sub Industry'] 
+    ciks = ticker_df['CIK'] 
+    
+    return list(tickers), list(security), list(sector), list(subSector), list(ciks)
+
+def yahooWebScraper(ticker):
+    elements = []
+    try:
+        web_data = requests.get('https://finance.yahoo.com/quote/' + ticker + '/sustainability?p=' + ticker).text
+        soup = BeautifulSoup(web_data, 'html.parser')
+        esg_score = soup.find('div', {'class' : 'Fz(36px) Fw(600) D(ib) Mend(5px)'})
+        datapoint = esg_score.text
+        scores = soup.find_all('div', {'class' : 'D(ib) Fz(23px) smartphone_Fz(22px) Fw(600)'})
+        controversey_score = soup.find('div', {'class' : 'D(ib) Fz(36px) Fw(500)'})
+        controversey_datapoint = controversey_score.text
+        
+        for score in scores:
+            elements.append(score.text)
+        
+        df = pd.DataFrame({'Total ESG Score': datapoint,
+                           'Environmental Score' : elements[0],
+                           'Social Score' : elements[1],
+                           'Governance Score' : elements[2],
+                           'Controversy Score' : controversey_datapoint},
+                            index = [ticker])
+        df = df.astype('float')
+        df['Controversy Assessment'] = df.apply(lambda x : level(x['Controversy Score']), axis = 1)
+    except:
+         
+        df = pd.DataFrame({'Total ESG Score': np.nan,
+                           'Environmental Score' : np.nan,
+                           'Social Score' : np.nan,
+                           'Governance Score' : np.nan,
+                           'Controversy Score' : np.nan},
+                            index = [ticker])
+        df = df.astype('float')
+        df['Controversy Assessment'] = np.nan
+        
+    return df
+
+def level(x):
+    if x == 0.0:
+        return 'No Controversy'
+    elif x == 1.0:
+        return 'Little Controversy'
+    elif x == 2.0:
+        return 'Moderate Controversy'
+    elif x == 3.0:
+        return 'Relatively High Controversy'
+    else:
+        return 'Severe Controversy'
+    
+if __name__ == "__main__":
+    
+    index = 'SP500'
+    tickers, security, sector, subSector, ciks = getTickers(index)
+    characterTable = pd.DataFrame([tickers, security, sector, subSector, ciks], index = ['Ticker', 'Security', 'Sector', 'Sub_Sector', 'CIK']).T
+    esgdfList = [yahooWebScraper(ticker) for ticker in tickers]
+    esgDataFrame = pd.concat(esgdfList).reset_index().rename({'index' : 'Ticker'}, axis = 1)
+    
+    esgDataFrameCharact = pd.merge(esgDataFrame, characterTable, how = 'left', on = 'Ticker')
+    
+    gc = pygsheets.authorize(service_file='/Users/theodorepender/Desktop/Midnight-Labs-9d593d26ebe7.json')
+    
+    #open the google spreadsheet (where 'Recession-Indicator' is the name of my sheet)
+    sh = gc.open('ESG-SP500')
+    
+    #select the sheet 
+    wks = sh[0]
+    
+    #update the sheets with the dataframes. 
+    wks.set_dataframe(esgDataFrameCharact,(1,1))
+    
