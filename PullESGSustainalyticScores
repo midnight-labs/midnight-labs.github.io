@@ -115,6 +115,8 @@ def yahooSustainabilityWebScraper(ticker):
         scores = soup.find_all('div', {'class' : 'D(ib) Fz(23px) smartphone_Fz(22px) Fw(600)'})
         controversey_score = soup.find('div', {'class' : 'D(ib) Fz(36px) Fw(500)'})
         controversey_datapoint = controversey_score.text
+        report_date = soup.findAll('span', {'class' : 'Mstart(5px)'})
+        report_date_datapoint = [y for y in [x.text for x in report_date] if 'Last updated on' in y][0]
         
         for score in scores:
             elements.append(score.text)
@@ -123,7 +125,8 @@ def yahooSustainabilityWebScraper(ticker):
                            'Environmental Score' : elements[0],
                            'Social Score' : elements[1],
                            'Governance Score' : elements[2],
-                           'Controversy Score' : controversey_datapoint},
+                           'Controversy Score' : controversey_datapoint,
+                           'Report Date' : report_date_datapoint},
                             index = [ticker])
         df = df.astype('float')
         df['Controversy Assessment'] = df.apply(lambda x : level(x['Controversy Score']), axis = 1)
@@ -133,7 +136,8 @@ def yahooSustainabilityWebScraper(ticker):
                            'Environmental Score' : np.nan,
                            'Social Score' : np.nan,
                            'Governance Score' : np.nan,
-                           'Controversy Score' : np.nan},
+                           'Controversy Score' : np.nan,
+                           'Report Date' : np.nan},
                             index = [ticker])
         df = df.astype('float')
         df['Controversy Assessment'] = np.nan
@@ -188,7 +192,6 @@ if __name__ == "__main__":
     marketcapDataFrame1000 = pd.concat(marketcapdfList).reset_index().rename({'index' : 'Ticker'}, axis = 1)
     
     esgDataFrameCharact1000 = pd.merge(esgDataFrame1000, characterTable1000, how = 'left', on = 'Ticker')
-    
     esgDataFrameCharact1000 = pd.merge(esgDataFrameCharact1000, marketcapDataFrame1000, how = 'left', on = 'Ticker')
     
     
@@ -200,7 +203,7 @@ if __name__ == "__main__":
     nasdaq_df = pd.read_csv(io.StringIO(nasdaq.decode('utf-8')))
     
     NASDAQesgdfList = [yahooSustainabilityWebScraper(ticker) for ticker in nasdaq_df['Symbol']]
-    NASDAQesgDataFrame = pd.concat(NASDAQesgdfList).reset_index().rename({'index' : 'Ticker'}, axis = 1)
+    NASDAQesgDataFrame = pd.concat(NASDAQesgdfList).reset_index().rename({'index' : 'Ticker'}, axis = 1).dropna()
 
     
     # ------ Write to google sheets ------ #
